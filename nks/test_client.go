@@ -23,12 +23,11 @@ func NewTestClientFromEnv() (*APIClient, error) {
 			endpoint = defaultNKSApiURL
 		}
 		return NewClient(token, endpoint), nil
-	} else {
-		mockClient := NewClient("MOCK_TOKEN", mockServer)
-		setupMockServer()
-		return mockClient, nil
-
 	}
+
+	mockClient := NewClient("MOCK_TOKEN", mockServer)
+	setupMockServer()
+	return mockClient, nil
 }
 
 func setupMockServer() {
@@ -174,6 +173,42 @@ func setupMockServer() {
 		Reply(http.StatusOK).
 		JSON(mockOrgs)
 
+	//keyset endpoints
+	gock.New("http://foo.bar").
+		Get("/orgs/1/keysets").
+		MatchHeader("Authorization", "MOCK_TOKEN").
+		HeaderPresent("User-Agent").
+		HeaderPresent("Content-Type").
+		Persist().
+		Reply(http.StatusOK).
+		JSON(mockKeysets)
+
+	gock.New("http://foo.bar").
+		Get("/orgs/1/keysets/1").
+		MatchHeader("Authorization", "MOCK_TOKEN").
+		HeaderPresent("User-Agent").
+		HeaderPresent("Content-Type").
+		Persist().
+		Reply(http.StatusOK).
+		JSON(mockKeyset)
+
+	gock.New("http://foo.bar").
+		Post("/orgs/1/keysets").
+		MatchHeader("Authorization", "MOCK_TOKEN").
+		MatchHeader("Content-Type", "application/json").
+		HeaderPresent("User-Agent").
+		HeaderPresent("Content-Type").
+		Persist().
+		Reply(http.StatusOK).
+		JSON(mockKeyset)
+
+	gock.New("http://foo.bar").
+		Delete("/orgs/1/keysets/1").
+		MatchHeader("Authorization", "MOCK_TOKEN").
+		HeaderPresent("User-Agent").
+		HeaderPresent("Content-Type").
+		Persist().
+		Reply(http.StatusNoContent)
 }
 
 var mockClusters = `[{
@@ -257,6 +292,48 @@ var mockOrgs = `[{
     "created": "2019-12-05T20:01:06.784326Z",
     "updated": "2019-12-05T20:01:06.784346Z"
   }]`
+
+var mockKeysets = `[{
+    "pk": 1,
+    "name": "My AWS Credentials",
+    "category": "provider",
+    "entity": "aws",
+    "org": 2,
+    "workspaces": [],
+    "user": 1,
+    "is_default": false,
+    "keys": [
+      {
+        "pk": 2,
+        "keyset": 1,
+        "key_type": "pub",
+        "fingerprint": "",
+        "user": 1
+      },
+      {
+        "pk": 3,
+        "keyset": 2,
+        "key_type": "pvt",
+        "fingerprint": "",
+        "user": 1
+      }
+    ],
+    "created": "2018-11-14T22:03:02.892559Z"
+  }
+]`
+
+var mockKeyset = `{
+  "pk": 3,
+  "name": "JDoe AWS Credentials",
+  "category": "provider",
+  "entity": "",
+  "org": 2,
+  "workspaces": [],
+  "user": 3,
+  "is_default": false,
+  "keys": [],
+  "created": "2019-02-06T17:32:05.802960Z"
+}`
 
 var mockOrg = `{
     "pk": 1,
